@@ -54,11 +54,18 @@ from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
 
+is_attack = False
+
 @app.route('/health', methods=['GET'])
 def health():
     # Implement necessary checks to confirm application health
     return jsonify(status="healthy"), 200
 
+@app.route('/toggle_attack', methods=['POST'])
+def toggle_attack():
+    global is_attack
+    is_attack = not is_attack  # Toggle the value of is_attack
+    return jsonify(IsAttack=is_attack), 200
 
 socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 
@@ -66,7 +73,7 @@ socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 model = joblib.load('model/isolation_forest_model.joblib')  # Replace with your model's path
 
 
-@socketio.on('sudo')
+@socketio.on('predict')
 def handle_predict(data):
     try:
         df = pd.DataFrame([data])
@@ -81,7 +88,7 @@ def handle_predict(data):
         prediction = prediction.tolist()
 
         # Emit the prediction result back to the client
-        emit('prediction_result', {'prediction': prediction[0]})
+        emit('prediction_result', {'prediction': prediction[0], 'IsAttack': is_attack})
 
     except KeyError as e:
         emit('prediction_error', {'error': f'Missing parameter: {str(e)}'})
