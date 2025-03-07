@@ -40,7 +40,6 @@ def handle_connect():
 @socketio.on('predict')
 def handle_predict(data):
     try:
-        logging.debug(data, type(data), "from client")
         if isinstance(data, str):
             data = json.loads(data)
         df = pd.DataFrame([data])
